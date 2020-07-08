@@ -3,3 +3,4 @@ pandas
 matplotlib
 mpl_finance
 ta-lib
+pytelegrambotapi

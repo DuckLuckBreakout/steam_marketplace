@@ -5,7 +5,7 @@ import matplotlib.pyplot as plt
 import matplotlib.ticker as ticker
 from mpl_finance import candlestick2_ohlc
 from skin import Skin
-import momentum_indicators
+from momentum_indicators import *
 import steampage
 
 
@@ -51,6 +51,7 @@ class SkinAnalyst:
                 i = 0
                 for arr in tmp_data:
                     data[f'{indicator.__name__}{i}'] = arr
+                    i += 1
             else:
                 data[indicator.__name__] = tmp_data
         return data
@@ -78,9 +79,54 @@ class SkinAnalyst:
         fig.tight_layout()
 
         i = 1
-        for indicator in list(data.keys())[4:]:
+        for indicator in list(data.keys())[5:]:
             ax[i].plot(data[indicator])
             i += 1
 
         plt.show()
         fig.savefig(self.skin.name)
+
+        output = {}
+        for indicator in list(data.keys())[4:]:
+            output[indicator] = data[indicator][-1]
+
+        return output
+
+    def get_graphs_BBANDS(self, indicators: list):
+        data = self.get_dataframe(indicators)
+        xdate = [datetime.fromtimestamp(datetime.strptime(str(date[:-3]), '%b %d %Y %H:').timestamp()) \
+                 for date in data['date']]
+
+        fig, ax = plt.subplots(sharex=True, dpi=1000)
+        data['open'] *= 100
+        data['high'] *= 100
+        data['low'] *= 100
+        data['close'] *= 100
+        candlestick2_ohlc(ax, data['open'], data['high'], data['low'], data['close'], width=0.6)
+
+        ax.xaxis.set_major_locator(ticker.MaxNLocator(20))
+
+        def chart_date(x, pos):
+            try:
+                return xdate[int(x)]
+            except IndexError:
+                return ''
+
+        ax.xaxis.set_major_formatter(ticker.FuncFormatter(chart_date))
+
+        fig.autofmt_xdate()
+        fig.tight_layout()
+
+        colors = ['red', 'blue', 'green', 'yellow']
+        i = 1
+        for indicator in list(data.keys())[5:]:
+            tmp_data = data[indicator]*100
+            ax.plot(tmp_data, c=colors[i])
+            i += 1
+
+        plt.show()
+        fig.savefig(self.skin.name)
+
+        output = {}
+        for indicator in list(data.keys())[4:]:
+            output[indicator] = data[indicator][-1]
